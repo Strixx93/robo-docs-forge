@@ -1,78 +1,31 @@
-import { SectionCard } from '@/components/section-card';
 import { SidebarLayout } from '@/components/ui/sidebar-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, BookOpen, Code, Shield, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-// Sample documentation sections
-const sampleSections = [
+// Documentation sections for navigation
+const documentationSections = [
   {
-    title: 'Robotics Platform Overview',
-    type: 'text' as const,
-    content: `# Welcome to RoboDocs
-
-Our comprehensive robotics documentation platform is designed to accelerate your team's onboarding and development process.
-
-## Key Features
-
-- **Real-time Control**: Direct robot control with minimal latency
-- **Advanced Sensors**: Integration with LIDAR, cameras, and IMU sensors  
-- **AI Integration**: Built-in machine learning capabilities
-- **Safety Systems**: Comprehensive safety protocols and emergency stops
-
-## Architecture
-
-The platform follows a modular architecture that allows for easy integration and scalability:
-
-1. **Control Layer**: Handles real-time robot commands and feedback
-2. **Sensor Layer**: Manages all sensor data acquisition and processing
-3. **AI Layer**: Provides intelligent decision-making capabilities
-4. **Safety Layer**: Ensures all operations meet safety requirements`,
-    updatedAt: '2024-01-15T10:30:00Z',
-    published: true
+    title: 'Platform Overview',
+    description: 'Comprehensive introduction to our robotics platform, architecture, and key features.',
+    icon: BookOpen,
+    url: '/docs/overview',
+    type: 'Getting Started'
   },
   {
-    title: 'Robot Control API',
-    type: 'code' as const,
-    language: 'python',
-    filename: 'robot_control.py',
-    content: `import asyncio
-from robotics_sdk import RobotController, SensorManager
-
-class RoboticsSystem:
-    def __init__(self, robot_id: str):
-        self.controller = RobotController(robot_id)
-        self.sensors = SensorManager()
-        
-    async def initialize(self):
-        """Initialize robot systems and sensors"""
-        await self.controller.connect()
-        await self.sensors.calibrate()
-        print("Robot system initialized successfully")
-        
-    async def move_forward(self, distance: float, speed: float = 1.0):
-        """Move robot forward by specified distance"""
-        await self.controller.move({
-            'direction': 'forward',
-            'distance': distance,
-            'speed': speed
-        })
-        
-    async def emergency_stop(self):
-        """Emergency stop all robot operations"""
-        await self.controller.emergency_stop()
-        print("Emergency stop activated")
-
-# Usage example
-async def main():
-    robot = RoboticsSystem("robot_001")
-    await robot.initialize()
-    await robot.move_forward(2.5, speed=0.8)
-
-if __name__ == "__main__":
-    asyncio.run(main())`,
-    updatedAt: '2024-01-14T16:45:00Z',
-    published: true
+    title: 'API Reference',
+    description: 'Complete Python API documentation with code examples and implementation guides.',
+    icon: Code,
+    url: '/docs/api-reference',
+    type: 'Development'
+  },
+  {
+    title: 'Safety Protocols',
+    description: 'Essential safety procedures, emergency protocols, and compliance requirements.',
+    icon: Shield,
+    url: '/docs/safety-protocols',
+    type: 'Safety'
   }
 ];
 
@@ -93,13 +46,17 @@ const Index = () => {
             Get your team up to speed with our interactive guides and code examples.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Button className="bg-gradient-primary hover:glow-primary">
-              <BookOpen className="w-4 h-4 mr-2" />
-              Start Learning
+            <Button className="bg-gradient-primary hover:glow-primary" asChild>
+              <Link to="/docs/overview">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Start Learning
+              </Link>
             </Button>
-            <Button variant="outline" className="hover:bg-primary/10 hover:border-primary">
-              View Documentation
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button variant="outline" className="hover:bg-primary/10 hover:border-primary" asChild>
+              <Link to="/admin">
+                View Admin Panel
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -150,21 +107,37 @@ const Index = () => {
         </div>
 
         {/* Documentation Sections */}
-        <div className="mb-8">
+        <div className="mb-12">
           <h2 className="text-2xl font-bold text-foreground mb-6">Documentation Sections</h2>
           <div className="grid gap-6">
-            {sampleSections.map((section, index) => (
-              <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                <SectionCard
-                  title={section.title}
-                  type={section.type}
-                  content={section.content}
-                  language={section.language}
-                  filename={section.filename}
-                  updatedAt={section.updatedAt}
-                  published={section.published}
-                />
-              </div>
+            {documentationSections.map((section, index) => (
+              <Link key={section.url} to={section.url} className="block">
+                <Card className="group hover:shadow-card transition-all duration-300 hover:border-primary/30 cursor-pointer animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                          <section.icon className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                            {section.title}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {section.type}
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {section.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
@@ -172,14 +145,16 @@ const Index = () => {
         {/* Call to Action */}
         <Card className="bg-gradient-hero border-primary/20 text-center">
           <CardContent className="p-8">
-            <h3 className="text-2xl font-bold text-foreground mb-4">Ready to Start Building?</h3>
+            <h3 className="text-2xl font-bold text-foreground mb-4">Ready to Start Managing Content?</h3>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
               Access the admin panel to create and manage your documentation sections. 
               Build comprehensive guides that will help your team succeed.
             </p>
-            <Button className="bg-gradient-primary hover:glow-primary">
-              <Shield className="w-4 h-4 mr-2" />
-              Access Admin Panel
+            <Button className="bg-gradient-primary hover:glow-primary" asChild>
+              <Link to="/admin">
+                <Shield className="w-4 h-4 mr-2" />
+                Access Admin Panel
+              </Link>
             </Button>
           </CardContent>
         </Card>

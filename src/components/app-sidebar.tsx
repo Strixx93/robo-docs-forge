@@ -96,34 +96,43 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Sample Documentation Sections */}
+        {/* Documentation Sections */}
         {!collapsed && (
           <SidebarGroup className="mt-6">
             <SidebarGroupLabel>Documentation</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <div className="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/docs/overview"
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${getNavClass('/docs/overview')}`}
+                    >
                       <FileText className="w-4 h-4" />
-                      <span>Introduction</span>
-                    </div>
+                      <span>Platform Overview</span>
+                    </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <div className="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/docs/api-reference"
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${getNavClass('/docs/api-reference')}`}
+                    >
                       <Code className="w-4 h-4" />
                       <span>API Reference</span>
-                    </div>
+                    </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <div className="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/docs/safety-protocols"
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${getNavClass('/docs/safety-protocols')}`}
+                    >
                       <Settings className="w-4 h-4" />
-                      <span>Configuration</span>
-                    </div>
+                      <span>Safety Protocols</span>
+                    </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
