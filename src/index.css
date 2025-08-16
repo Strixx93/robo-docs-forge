@@ -132,12 +132,9 @@
     @apply bg-[hsl(var(--code-bg))] border border-[hsl(var(--code-border))] rounded-lg;
   }
 
-  /* Markdown content styling with Tailwind Typography */
+  /* Markdown content styling */
   .markdown-content {
-    @apply prose prose-invert prose-lg max-w-none;
-    @apply prose-headings:text-foreground prose-p:text-muted-foreground;
-    @apply prose-strong:text-foreground prose-code:text-primary;
-    @apply prose-pre:bg-[hsl(var(--code-bg))] prose-pre:border prose-pre:border-[hsl(var(--code-border))];
+    @apply prose prose-invert max-w-none;
   }
 
   .markdown-content h1 {
