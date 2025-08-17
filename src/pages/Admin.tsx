@@ -5,131 +5,58 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Loader2 } from 'lucide-react';
 import { SidebarLayout } from '@/components/ui/sidebar-layout';
-
-interface DocumentSection {
-  id: string;
-  title: string;
-  type: 'text' | 'code';
-  content: string;
-  language?: string;
-  filename?: string;
-  published: boolean;
-  order: number;
-  updatedAt: string;
-}
-
-// Sample data
-const sampleSections: DocumentSection[] = [
-  {
-    id: '1',
-    title: 'Robotics Platform Overview',
-    type: 'text',
-    content: `# Robotics Platform Overview
-
-Welcome to our comprehensive robotics documentation platform. This system is designed to help teams onboard quickly and efficiently.
-
-## Key Features
-
-- **Real-time Control**: Direct robot control with minimal latency
-- **Advanced Sensors**: Integration with LIDAR, cameras, and IMU sensors
-- **AI Integration**: Built-in machine learning capabilities
-- **Safety Systems**: Comprehensive safety protocols and emergency stops
-
-## Getting Started
-
-To begin working with our robotics platform, you'll need to understand the core concepts and setup procedures outlined in this documentation.`,
-    published: true,
-    order: 1,
-    updatedAt: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    title: 'Robot Control API',
-    type: 'code',
-    language: 'python',
-    filename: 'robot_control.py',
-    content: `import asyncio
-from robotics_sdk import RobotController, SensorManager
-
-class RoboticsSystem:
-    def __init__(self, robot_id: str):
-        self.controller = RobotController(robot_id)
-        self.sensors = SensorManager()
-        
-    async def initialize(self):
-        """Initialize robot systems and sensors"""
-        await self.controller.connect()
-        await self.sensors.calibrate()
-        print("Robot system initialized successfully")
-        
-    async def move_forward(self, distance: float, speed: float = 1.0):
-        """Move robot forward by specified distance"""
-        await self.controller.move({
-            'direction': 'forward',
-            'distance': distance,
-            'speed': speed
-        })
-        
-    async def emergency_stop(self):
-        """Emergency stop all robot operations"""
-        await self.controller.emergency_stop()
-        print("Emergency stop activated")
-
-# Usage example
-async def main():
-    robot = RoboticsSystem("robot_001")
-    await robot.initialize()
-    await robot.move_forward(2.5, speed=0.8)
-
-if __name__ == "__main__":
-    asyncio.run(main())`,
-    published: true,
-    order: 2,
-    updatedAt: '2024-01-14T16:45:00Z'
-  },
-  {
-    id: '3',
-    title: 'Safety Protocols',
-    type: 'text',
-    content: `# Safety Protocols
-
-Safety is our top priority when working with robotic systems. Please follow these protocols at all times.
-
-## Emergency Procedures
-
-1. **Emergency Stop**: Always keep the emergency stop button within reach
-2. **Safe Zones**: Maintain designated safe zones around active robots
-3. **Personal Protective Equipment**: Wear required safety gear
-
-## Pre-Operation Checklist
-
-- [ ] Verify emergency stop functionality
-- [ ] Check sensor calibration
-- [ ] Confirm communication links
-- [ ] Review planned operation area`,
-    published: false,
-    order: 3,
-    updatedAt: '2024-01-13T09:15:00Z'
-  }
-];
+import { useDocumentSections } from '@/hooks/useDocumentSections';
+import { type DocumentSection } from '@/lib/supabase';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function Admin() {
-  const [sections, setSections] = useState<DocumentSection[]>(sampleSections);
+  const { 
+    sections, 
+    loading, 
+    error, 
+    createSection, 
+    updateSection, 
+    deleteSection: deleteSectionFromDB, 
+    togglePublished: togglePublishedInDB 
+  } = useDocumentSections();
+  
   const [editingSection, setEditingSection] = useState<DocumentSection | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
-  const togglePublished = (id: string) => {
-    setSections(prev => prev.map(section => 
-      section.id === id 
-        ? { ...section, published: !section.published }
-        : section
-    ));
+  const togglePublished = async (id: string) => {
+    try {
+      await togglePublishedInDB(id);
+      toast({
+        title: "Success",
+        description: "Section publication status updated",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to update section",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteSection = (id: string) => {
-    setSections(prev => prev.filter(section => section.id !== id));
+  const deleteSection = async (id: string) => {
+    try {
+      await deleteSectionFromDB(id);
+      toast({
+        title: "Success",
+        description: "Section deleted successfully",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to delete section",
+        variant: "destructive",
+      });
+    }
   };
 
   const startEditing = (section: DocumentSection) => {
@@ -145,37 +72,79 @@ export default function Admin() {
       content: '',
       published: false,
       order: sections.length + 1,
-      updatedAt: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
     setIsCreating(true);
   };
 
-  const saveSection = () => {
+  const saveSection = async () => {
     if (!editingSection) return;
 
-    if (isCreating) {
-      const newSection = {
-        ...editingSection,
-        id: Date.now().toString(),
-        updatedAt: new Date().toISOString()
-      };
-      setSections(prev => [...prev, newSection]);
-    } else {
-      setSections(prev => prev.map(section => 
-        section.id === editingSection.id 
-          ? { ...editingSection, updatedAt: new Date().toISOString() }
-          : section
-      ));
-    }
+    try {
+      setSaving(true);
+      
+      if (isCreating) {
+        const { id, created_at, updated_at, ...sectionData } = editingSection;
+        await createSection(sectionData);
+        toast({
+          title: "Success",
+          description: "Section created successfully",
+        });
+      } else {
+        const { created_at, updated_at, ...sectionData } = editingSection;
+        await updateSection(editingSection.id, sectionData);
+        toast({
+          title: "Success",
+          description: "Section updated successfully",
+        });
+      }
 
-    setEditingSection(null);
-    setIsCreating(false);
+      setEditingSection(null);
+      setIsCreating(false);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: `Failed to ${isCreating ? 'create' : 'update'} section`,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const cancelEditing = () => {
     setEditingSection(null);
     setIsCreating(false);
   };
+
+  if (loading) {
+    return (
+      <SidebarLayout>
+        <div className="p-8 max-w-7xl mx-auto flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Loading sections...</span>
+          </div>
+        </div>
+      </SidebarLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <SidebarLayout>
+        <div className="p-8 max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <p className="text-destructive mb-4">Error: {error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Reload Page
+            </Button>
+          </div>
+        </div>
+      </SidebarLayout>
+    );
+  }
 
   return (
     <SidebarLayout>
@@ -259,10 +228,15 @@ export default function Admin() {
               />
 
               <div className="flex gap-2">
-                <Button onClick={saveSection} className="bg-gradient-primary">
+                <Button 
+                  onClick={saveSection} 
+                  className="bg-gradient-primary"
+                  disabled={saving}
+                >
+                  {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {isCreating ? 'Create' : 'Save'} Section
                 </Button>
-                <Button onClick={cancelEditing} variant="outline">
+                <Button onClick={cancelEditing} variant="outline" disabled={saving}>
                   Cancel
                 </Button>
               </div>
@@ -327,7 +301,7 @@ export default function Admin() {
                     {section.content.substring(0, 200)}...
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">
-                    Updated {new Date(section.updatedAt).toLocaleDateString()}
+                    Updated {new Date(section.updated_at).toLocaleDateString()}
                   </div>
                 </CardContent>
               </Card>
