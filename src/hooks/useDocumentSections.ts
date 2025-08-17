@@ -6,8 +6,8 @@ export type DocumentSection = {
   title: string
   type: 'text' | 'code'
   content: string
-  language?: string
-  filename?: string
+  language?: string | null
+  filename?: string | null
   published: boolean
   order: number
   created_at: string
@@ -32,7 +32,7 @@ export function useDocumentSections() {
           .order('order', { ascending: true })
         
         if (!error && data) {
-          setSections(data)
+          setSections(data as DocumentSection[])
           setLoading(false)
           return
         }
@@ -92,8 +92,8 @@ export function useDocumentSections() {
           .single()
 
         if (!error && data) {
-          setSections(prev => [...prev, data])
-          return data
+          setSections(prev => [...prev, data as DocumentSection])
+          return data as DocumentSection
         }
       } catch (supabaseError) {
         // Fall through to localStorage
@@ -132,9 +132,9 @@ export function useDocumentSections() {
 
         if (!error && data) {
           setSections(prev => prev.map(section => 
-            section.id === id ? data : section
+            section.id === id ? data as DocumentSection : section
           ))
-          return data
+          return data as DocumentSection
         }
       } catch (supabaseError) {
         // Fall through to localStorage
