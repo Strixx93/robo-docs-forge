@@ -89,7 +89,7 @@ export function useDocumentSections() {
           .from('document_sections')
           .insert([section])
           .select()
-          .single()
+          .maybeSingle()
 
         if (!error && data) {
           setSections(prev => [...prev, data as DocumentSection])
@@ -128,7 +128,7 @@ export function useDocumentSections() {
           .update({ ...updates, updated_at: new Date().toISOString() })
           .eq('id', id)
           .select()
-          .single()
+          .maybeSingle()
 
         if (!error && data) {
           setSections(prev => prev.map(section => 
