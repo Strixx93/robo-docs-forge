@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react'
-import { supabase, type DocumentSection } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
+
+export type DocumentSection = {
+  id: string
+  title: string
+  type: 'text' | 'code'
+  content: string
+  language?: string
+  filename?: string
+  published: boolean
+  order: number
+  created_at: string
+  updated_at: string
+}
 
 export function useDocumentSections() {
   const [sections, setSections] = useState<DocumentSection[]>([])

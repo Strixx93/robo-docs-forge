@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Loader2 } from 'lucide-react';
 import { SidebarLayout } from '@/components/ui/sidebar-layout';
 import { useDocumentSections } from '@/hooks/useDocumentSections';
-import { type DocumentSection } from '@/lib/supabase';
+import { type DocumentSection } from '@/hooks/useDocumentSections';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function Admin() {
