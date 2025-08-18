@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, FileText, Code, Settings, BookOpen, Zap } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -15,6 +15,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
+import { useDocumentSections } from '@/hooks/useDocumentSections';
 
 const navItems = [
   { title: "Getting Started", url: "/", icon: BookOpen },
@@ -27,6 +28,7 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const [searchQuery, setSearchQuery] = useState("");
+  const { sections } = useDocumentSections();
 
   const isActive = (path: string) => {
     if (path === "/") return currentPath === "/";
@@ -102,39 +104,26 @@ export function AppSidebar() {
             <SidebarGroupLabel>Documentation</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/docs/overview"
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${getNavClass('/docs/overview')}`}
-                    >
-                      <FileText className="w-4 h-4" />
-                      <span>Platform Overview</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/docs/api-reference"
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${getNavClass('/docs/api-reference')}`}
-                    >
-                      <Code className="w-4 h-4" />
-                      <span>API Reference</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/docs/safety-protocols"
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${getNavClass('/docs/safety-protocols')}`}
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>Safety Protocols</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {sections
+                  .filter(section => section.published)
+                  .sort((a, b) => a.order - b.order)
+                  .map((section) => (
+                    <SidebarMenuItem key={section.id}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={`/docs/${section.id}`}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${getNavClass(`/docs/${section.id}`)}`}
+                        >
+                          {section.type === 'code' ? (
+                            <Code className="w-4 h-4" />
+                          ) : (
+                            <FileText className="w-4 h-4" />
+                          )}
+                          <span>{section.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

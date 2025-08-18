@@ -1,35 +1,13 @@
 import { SidebarLayout } from '@/components/ui/sidebar-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, BookOpen, Code, Shield, ArrowRight } from 'lucide-react';
+import { Zap, BookOpen, Code, Shield, ArrowRight, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useDocumentSections } from '@/hooks/useDocumentSections';
 
-// Documentation sections for navigation
-const documentationSections = [
-  {
-    title: 'Platform Overview',
-    description: 'Comprehensive introduction to our robotics platform, architecture, and key features.',
-    icon: BookOpen,
-    url: '/docs/overview',
-    type: 'Getting Started'
-  },
-  {
-    title: 'API Reference',
-    description: 'Complete Python API documentation with code examples and implementation guides.',
-    icon: Code,
-    url: '/docs/api-reference',
-    type: 'Development'
-  },
-  {
-    title: 'Safety Protocols',
-    description: 'Essential safety procedures, emergency protocols, and compliance requirements.',
-    icon: Shield,
-    url: '/docs/safety-protocols',
-    type: 'Safety'
-  }
-];
 
 const Index = () => {
+  const { sections, loading } = useDocumentSections();
   return (
     <SidebarLayout>
       <div className="p-8 max-w-7xl mx-auto">
@@ -109,37 +87,65 @@ const Index = () => {
         {/* Documentation Sections */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-foreground mb-6">Documentation Sections</h2>
-          <div className="grid gap-6">
-            {documentationSections.map((section, index) => (
-              <Link key={section.url} to={section.url} className="block">
-                <Card className="group hover:shadow-card transition-all duration-300 hover:border-primary/30 cursor-pointer animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                          <section.icon className="w-6 h-6 text-primary" />
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Loading sections...</p>
+            </div>
+          ) : sections.filter(s => s.published).length > 0 ? (
+            <div className="grid gap-6">
+              {sections
+                .filter(section => section.published)
+                .sort((a, b) => a.order - b.order)
+                .map((section, index) => (
+                  <Link key={section.id} to={`/docs/${section.id}`} className="block">
+                    <Card className="group hover:shadow-card transition-all duration-300 hover:border-primary/30 cursor-pointer animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                              {section.type === 'code' ? (
+                                <Code className="w-6 h-6 text-primary" />
+                              ) : (
+                                <FileText className="w-6 h-6 text-primary" />
+                              )}
+                            </div>
+                            <div>
+                              <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                                {section.title}
+                              </CardTitle>
+                              <p className="text-sm text-muted-foreground mt-1 capitalize">
+                                {section.type} {section.language && `• ${section.language}`}
+                              </p>
+                            </div>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
-                        <div>
-                          <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                            {section.title}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {section.type}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {section.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground leading-relaxed">
+                          {section.content.substring(0, 150)}...
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+            </div>
+          ) : (
+            <Card className="text-center py-12">
+              <CardContent>
+                <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">No Documentation Yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Create your first documentation section in the admin panel.
+                </p>
+                <Button asChild>
+                  <Link to="/admin">
+                    Create Section
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Call to Action */}
