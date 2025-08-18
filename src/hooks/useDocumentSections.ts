@@ -84,20 +84,19 @@ export function useDocumentSections() {
   const createSection = async (section: Omit<DocumentSection, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       // Try Supabase first
-      try {
-        const { data, error } = await supabase
-          .from('document_sections')
-          .insert([section])
-          .select()
-          .maybeSingle()
+      const { data, error } = await supabase
+        .from('document_sections')
+        .insert([section])
+        .select()
+        .single()
 
-        if (!error && data) {
-          setSections(prev => [...prev, data as DocumentSection])
-          return data as DocumentSection
-        }
-      } catch (supabaseError) {
-        // Fall through to localStorage
+      if (!error && data) {
+        setSections(prev => [...prev, data as DocumentSection].sort((a, b) => a.order - b.order))
+        return data as DocumentSection
       }
+      
+      // If Supabase fails, fall back to localStorage
+      console.warn('Supabase insert failed, using localStorage:', error)
       
       // Fallback to localStorage
       const newSection = {
@@ -122,23 +121,22 @@ export function useDocumentSections() {
   const updateSection = async (id: string, updates: Partial<DocumentSection>) => {
     try {
       // Try Supabase first
-      try {
-        const { data, error } = await supabase
-          .from('document_sections')
-          .update({ ...updates, updated_at: new Date().toISOString() })
-          .eq('id', id)
-          .select()
-          .maybeSingle()
+      const { data, error } = await supabase
+        .from('document_sections')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
 
-        if (!error && data) {
-          setSections(prev => prev.map(section => 
-            section.id === id ? data as DocumentSection : section
-          ))
-          return data as DocumentSection
-        }
-      } catch (supabaseError) {
-        // Fall through to localStorage
+      if (!error && data) {
+        setSections(prev => prev.map(section => 
+          section.id === id ? data as DocumentSection : section
+        ).sort((a, b) => a.order - b.order))
+        return data as DocumentSection
       }
+      
+      // If Supabase fails, fall back to localStorage
+      console.warn('Supabase update failed, using localStorage:', error)
       
       // Fallback to localStorage
       const updatedSection = { ...updates, updated_at: new Date().toISOString() }
@@ -162,14 +160,18 @@ export function useDocumentSections() {
   const deleteSection = async (id: string) => {
     try {
       // Try Supabase first
-      try {
-        await supabase
-          .from('document_sections')
-          .delete()
-          .eq('id', id)
-      } catch (supabaseError) {
-        // Continue with localStorage update
+      const { error } = await supabase
+        .from('document_sections')
+        .delete()
+        .eq('id', id)
+      
+      if (!error) {
+        setSections(prev => prev.filter(section => section.id !== id))
+        return
       }
+      
+      // If Supabase fails, fall back to localStorage
+      console.warn('Supabase delete failed, using localStorage:', error)
 
       // Update localStorage
       const stored = localStorage.getItem('document_sections')
